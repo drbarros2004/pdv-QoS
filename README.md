@@ -1,4 +1,4 @@
-# Trabalho COS482 — Qualidade e Teste de Software (2026.2)
+# Trabalho COS482 — Qualidade de Software (2026.2)
 
 Fork de [repo-software-testing-courses/pdv](https://github.com/repo-software-testing-courses/pdv).
 
