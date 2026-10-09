@@ -10,7 +10,7 @@ Fork de [repo-software-testing-courses/pdv](https://github.com/repo-software-tes
 | Código-fonte original (fork) | [src/](src/) |
 | Testes unitários | [src/test/java](src/test/java) |
 | Plano de Teste (IEEE 829) | [Google Docs](https://docs.google.com/document/d/1MENsC4y9bwNVXcliehmjZG5cn4AUcddNN_FSasJhsMM/edit?usp=sharing) |
-| Casos de teste manuais | _a definir — TestLink / Google Docs_ |
+| Casos de teste manuais | [Google Sheets](https://docs.google.com/spreadsheets/d/1Cty37931EZiXMWSM4s3-YRMZzpC-lXd195lgLeqfwbk/edit?usp=sharing) |
 | Bugs reportados | [Issues](https://github.com/drbarros2004/pdv-QoS/issues) |
 
 ## Integrantes
