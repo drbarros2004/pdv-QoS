@@ -1,0 +1,4 @@
+services:
+  selenium:
+    image: selenium/standalone-chrome:4.13.0-20231004
+    shm_size: 2gb

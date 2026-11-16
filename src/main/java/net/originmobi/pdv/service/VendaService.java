@@ -210,7 +210,7 @@ public class VendaService {
 					if (!caixas.caixaIsAberto())
 						throw new RuntimeException("nenhum caixa aberto");
 
-					qtdVezes = avistaDinheiro(vlprodutos, vlParcelas, formaPagar, qtdVezes, i, desc, acre);
+					qtdVezes = avistaDinheiro(vlprodutos, vlParcelas, formaPagar, qtdVezes, i, acre, desc);
 				}
 
 				// se for no cartão de debito ou crédito
@@ -221,6 +221,9 @@ public class VendaService {
 
 					cartaoLancamento.lancamento(vl_parcela, titulo);
 				}
+				else {
+					throw new RuntimeException("Título inválido para venda à vista");
+				}
 
 			} else {
 				// venda a prazo
@@ -229,8 +232,8 @@ public class VendaService {
 					throw new RuntimeException("Venda sem cliente, verifique");
 
 				// no dinheiro
-				sequencia = aprazo(vlprodutos, vlParcelas, dataAtual, formaPagar, qtdVezes, sequencia, receber, i, desc,
-						acre);
+				sequencia = aprazo(vlprodutos, vlParcelas, dataAtual, formaPagar, qtdVezes, sequencia, receber, i, acre,
+						desc);
 			}
 
 			try {
@@ -296,7 +299,7 @@ public class VendaService {
 
 		// pega a soma de todas as parcelas para comparar com o valor recebido
 		for (int aux = 0; aux < vlParcelas.length; aux++)
-			totalParcelas += Double.valueOf(vlParcelas[i]);
+			totalParcelas += Double.valueOf(vlParcelas[aux]);
 
 		if (!totalParcelas.equals(vlprodutos))
 			throw new RuntimeException("Valor das parcelas diferente do valor total de produtos, verifique");

@@ -21,8 +21,8 @@ public interface ParcelaRepository extends JpaRepository<Parcela, Long> {
 	@Transactional
 	@Modifying
 	@Query(value = "insert into parcela (valor_total, valor_desconto, valor_acrescimo, valor_recebido, valor_restante, receber_codigo, quitado, sequencia,"
-			+ "data_cadastro, data_vencimento) values (:valor_total, :valor_desconto, :valor_acrescimo, :valor_recebido, :valor_restante, "
-			+ ":receber_codigo, :quitado, :sequencia, :data_cadastro, :data_vencimento)", nativeQuery = true)
+			+ "data_cadastro, data_alteracao, data_vencimento) values (:valor_total, :valor_desconto, :valor_acrescimo, :valor_recebido, :valor_restante, "
+			+ ":receber_codigo, :quitado, :sequencia, :data_cadastro, :data_cadastro, :data_vencimento)", nativeQuery = true)
 	public void gerarparcela(@Param("valor_total") Double total, @Param("valor_desconto") Double desconto,
 			@Param("valor_acrescimo") Double acrescimo, @Param("valor_recebido") Double recebido,
 			@Param("valor_restante") Double restante, @Param("receber_codigo") Receber receber,
