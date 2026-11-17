@@ -27,6 +27,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -35,6 +37,7 @@ import net.originmobi.pdv.enumerado.EntradaSaida;
 import net.originmobi.pdv.enumerado.VendaSituacao;
 import net.originmobi.pdv.enumerado.caixa.EstiloLancamento;
 import net.originmobi.pdv.enumerado.caixa.TipoLancamento;
+import net.originmobi.pdv.filter.VendaFilter;
 import net.originmobi.pdv.model.Caixa;
 import net.originmobi.pdv.model.CaixaLancamento;
 import net.originmobi.pdv.model.PagamentoTipo;
@@ -43,6 +46,7 @@ import net.originmobi.pdv.model.Receber;
 import net.originmobi.pdv.model.Titulo;
 import net.originmobi.pdv.model.Usuario;
 import net.originmobi.pdv.model.Venda;
+import net.originmobi.pdv.model.VendaProduto;
 import net.originmobi.pdv.repository.VendaRepository;
 import net.originmobi.pdv.service.cartao.CartaoLancamentoService;
 import net.originmobi.pdv.singleton.Aplicacao;
@@ -87,6 +91,12 @@ public class VendaServiceTest {
 	@Mock
 	private ProdutoService produtos;
 
+	@Mock
+	private Pageable pageable;
+
+	@Mock
+	private Page<Venda> pagina;
+
 	@InjectMocks
 	private VendaService service;
 
@@ -100,6 +110,112 @@ public class VendaServiceTest {
 		instanciaAplicacao.set(null, null);
 		venda = novaVenda(VendaSituacao.ABERTA, new Pessoa());
 		when(vendas.findByCodigoEquals(COD_VENDA)).thenReturn(venda);
+	}
+
+	@Test
+	public void buscaPorCodigoUsaFiltroDeCodigo() {
+		VendaFilter filter = new VendaFilter();
+		filter.setCodigo(42L);
+		when(vendas.findByCodigoIn(42L, pageable)).thenReturn(pagina);
+
+		Page<Venda> resultado = service.busca(filter, "ABERTA", pageable);
+
+		assertSame(pagina, resultado);
+		verify(vendas).findByCodigoIn(42L, pageable);
+		verify(vendas, never()).findBySituacaoEquals(any(VendaSituacao.class), any(Pageable.class));
+	}
+
+	@Test
+	public void buscaSemCodigoUsaSituacaoFechada() {
+		VendaFilter filter = new VendaFilter();
+		when(vendas.findBySituacaoEquals(VendaSituacao.FECHADA, pageable)).thenReturn(pagina);
+
+		Page<Venda> resultado = service.busca(filter, "FECHADA", pageable);
+
+		assertSame(pagina, resultado);
+		verify(vendas).findBySituacaoEquals(VendaSituacao.FECHADA, pageable);
+		verify(vendas, never()).findByCodigoIn(anyLong(), any(Pageable.class));
+	}
+
+	@Test
+	public void abreVendaNovaInicializaDadosEGrava() {
+		Venda novaVenda = new Venda();
+		Usuario usuario = new Usuario();
+		when(usuarios.buscaUsuario("operador")).thenReturn(usuario);
+
+		service.abreVenda(novaVenda);
+
+		assertEquals(VendaSituacao.ABERTA, novaVenda.getSituacao());
+		assertEquals(0.0, novaVenda.getValor_produtos(), 0.0);
+		assertSame(usuario, novaVenda.getUsuario());
+		assertNotNull(novaVenda.getData_cadastro());
+		verify(vendas).save(novaVenda);
+	}
+
+	@Test
+	public void abreVendaExistenteAtualizaPessoaEObservacao() {
+		Pessoa pessoa = new Pessoa();
+		Venda vendaExistente = novaVenda(VendaSituacao.ABERTA, pessoa);
+		vendaExistente.setObservacao("cliente pediu entrega");
+
+		Long codigo = service.abreVenda(vendaExistente);
+
+		assertEquals(COD_VENDA, codigo);
+		verify(vendas).updateDadosVenda(pessoa, "cliente pediu entrega", COD_VENDA);
+		verify(vendas, never()).save(any(Venda.class));
+	}
+
+	@Test
+	public void addProdutoEmVendaAbertaSalvaItem() {
+		when(vendas.verificaSituacao(COD_VENDA)).thenReturn(VendaSituacao.ABERTA.toString());
+
+		String mensagem = service.addProduto(COD_VENDA, 7L, 1.5);
+
+		assertEquals("ok", mensagem);
+		verify(vendaProdutos).salvar(any(VendaProduto.class));
+	}
+
+	@Test
+	public void addProdutoEmVendaFechadaNaoSalvaItem() {
+		when(vendas.verificaSituacao(COD_VENDA)).thenReturn(VendaSituacao.FECHADA.toString());
+
+		String mensagem = service.addProduto(COD_VENDA, 7L, 1.5);
+
+		assertEquals("Venda fechada", mensagem);
+		verify(vendaProdutos, never()).salvar(any(VendaProduto.class));
+	}
+
+	@Test
+	public void removeProdutoEmVendaAbertaRemoveItem() {
+		String mensagem = service.removeProduto(8L, COD_VENDA);
+
+		assertEquals("ok", mensagem);
+		verify(vendaProdutos).removeProduto(8L);
+	}
+
+	@Test
+	public void removeProdutoEmVendaFechadaNaoRemoveItem() {
+		venda.setSituacao(VendaSituacao.FECHADA);
+
+		String mensagem = service.removeProduto(8L, COD_VENDA);
+
+		assertEquals("Venda fechada", mensagem);
+		verify(vendaProdutos, never()).removeProduto(anyLong());
+	}
+
+	@Test
+	public void listaRetornaVendasDoRepositorio() {
+		java.util.List<Venda> vendasSalvas = java.util.Collections.singletonList(venda);
+		when(vendas.findAll()).thenReturn(vendasSalvas);
+
+		assertSame(vendasSalvas, service.lista());
+	}
+
+	@Test
+	public void qtdAbertosRetornaQuantidadeDoRepositorio() {
+		when(vendas.qtdVendasEmAberto()).thenReturn(3);
+
+		assertEquals(3, service.qtdAbertos());
 	}
 
 	@Test
@@ -190,6 +306,38 @@ public class VendaServiceTest {
 	}
 
 	@Test
+	public void fechaVendaEmDinheiroAplicaDescontoEAcrescimoNoLancamento() {
+		preparaPagamentoEmDinheiroComCaixaAberto();
+		when(usuarios.buscaUsuario("operador")).thenReturn(new Usuario());
+
+		service.fechaVenda(COD_VENDA, COD_PAGAMENTO, 100.0, 10.0, 20.0,
+				new String[] { "100" }, new String[] { COD_TITULO.toString() });
+
+		ArgumentCaptor<CaixaLancamento> captor = ArgumentCaptor.forClass(CaixaLancamento.class);
+		verify(lancamentos).lancamento(captor.capture());
+		assertEquals(110.0, captor.getValue().getValor(), 0.0);
+	}
+
+	@Test
+	public void fechaVendaComDinheiroEAPrazoAceitaParcelasQueSomamTotal() {
+		preparaPagamento("00/30", "DIN");
+		Caixa caixa = new Caixa();
+		when(caixas.caixaIsAberto()).thenReturn(true);
+		when(caixas.caixaAberto()).thenReturn(Optional.of(caixa));
+		when(usuarios.buscaUsuario("operador")).thenReturn(new Usuario());
+
+		String mensagem = service.fechaVenda(COD_VENDA, COD_PAGAMENTO, 100.0, 0.0, 0.0,
+				new String[] { "40", "60" }, new String[] { COD_TITULO.toString(), COD_TITULO.toString() });
+
+		assertEquals("Venda finalizada com sucesso", mensagem);
+		ArgumentCaptor<CaixaLancamento> lancamentoCaptor = ArgumentCaptor.forClass(CaixaLancamento.class);
+		verify(lancamentos).lancamento(lancamentoCaptor.capture());
+		assertEquals(40.0, lancamentoCaptor.getValue().getValor(), 0.0);
+		verify(parcelas).gerarParcela(eq(60.0), eq(0.0), eq(0.0), eq(0.0), eq(60.0), any(Receber.class),
+				eq(0), eq(1), any(Timestamp.class), any(Date.class));
+	}
+
+	@Test
 	public void fechaVendaNoCartaoDeDebitoRegistraLancamento() {
 		Titulo titulo = preparaPagamento("00", "CARTDEB");
 
@@ -210,6 +358,16 @@ public class VendaServiceTest {
 
 		verify(cartaoLancamento).lancamento(100.0, Optional.of(titulo));
 		verifyZeroInteractions(caixas, lancamentos);
+	}
+
+	@Test
+	public void fechaVendaAVistaComTituloInvalidoLancaExcecao() {
+		preparaPagamento("00", "OUTRO");
+
+		assertLancaExcecao("Título inválido para venda à vista", () -> fechaVenda(new String[] { "100" }));
+
+		verifyZeroInteractions(caixas, lancamentos, cartaoLancamento);
+		verify(produtos, never()).movimentaEstoque(anyLong(), any(EntradaSaida.class));
 	}
 
 	@Test
@@ -252,6 +410,17 @@ public class VendaServiceTest {
 				eq(1), any(Timestamp.class), any(Date.class));
 		verificaFechamento(100.0, 0.0, 0.0);
 		verify(produtos).movimentaEstoque(COD_VENDA, EntradaSaida.SAIDA);
+	}
+
+	@Test
+	public void fechaVendaAPrazoAplicaDescontoEAcrescimoNaParcela() {
+		preparaPagamento("30", "DIN");
+
+		service.fechaVenda(COD_VENDA, COD_PAGAMENTO, 100.0, 10.0, 20.0,
+				new String[] { "100" }, new String[] { COD_TITULO.toString() });
+
+		verify(parcelas).gerarParcela(eq(110.0), eq(0.0), eq(0.0), eq(0.0), eq(110.0), any(Receber.class),
+				eq(0), eq(1), any(Timestamp.class), any(Date.class));
 	}
 
 	@Test

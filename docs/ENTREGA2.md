@@ -11,8 +11,8 @@ O ambiente continua o mesmo da Entrega 1: pré-requisitos, clone e comandos do d
 | Melhorar e ampliar os testes unitários, isolando dependências | #67 | JUnit 4 + Mockito |
 | Testes de integração | #69 | JUnit 4 + MySQL do Docker |
 | Medidas da ISO/IEC 25010 com GQM | #72 | Google Docs |
-| Testes de sistema, pelo menos 1 E2E por integrante | #73 | Selenium (falta configurar) |
-| Técnicas funcional, estrutural (≥ 80% de arestas) e baseada em defeitos (≥ 80% de mutação) | #74 | JaCoCo (ver a seção 4) e PIT (falta configurar) |
+| Testes de sistema, pelo menos 1 E2E por integrante | #73 | Selenium configurado para `VendaService` (ver a seção 6) |
+| Técnicas funcional, estrutural (≥ 80% de arestas) e baseada em defeitos (≥ 80% de mutação) | #74 | JaCoCo (ver a seção 4) e PIT configurado para `VendaService` (ver a seção 6) |
 | Relatório de inspeção, com print antes e depois das correções | #75 | SonarQube, ver a seção 5 |
 | Plano de Teste, README e slides | #71, #76, #77 | — |
 
@@ -89,3 +89,9 @@ Ver os problemas da sua classe:
 4) Coloque esses prints no relatório de inspeção
 
 Para o print do "depois": corrija a classe, rode a análise de novo e tire o print do mesmo filtro. Os prints e a explicação do que mudou vão no relatório de inspeção (Google Docs, link na #75).
+
+## 6. Resultado individual — Pedro / VendaService
+
+O roadmap executado, técnica funcional, métricas JaCoCo/PIT, integração, E2E e pendências do SonarQube estão consolidados em [ROADMAP_ENTREGA2_PEDRO.md](ROADMAP_ENTREGA2_PEDRO.md).
+
+Resultado atual de `VendaService`: 28 testes unitários verdes, 38/38 branches (100%), teste de integração real verde, E2E Selenium verde e 80% de mutation score no PIT.
