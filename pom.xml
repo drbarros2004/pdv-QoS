@@ -171,9 +171,11 @@
 				<configuration>
 					<targetClasses>
 						<param>net.originmobi.pdv.service.VendaService</param>
+						<param>net.originmobi.pdv.service.CaixaService</param>
 					</targetClasses>
 					<targetTests>
 						<param>net.originmobi.pdv.service.VendaServiceTest</param>
+						<param>net.originmobi.pdv.service.CaixaServiceTest</param>
 					</targetTests>
 					<mutationThreshold>80</mutationThreshold>
 					<threads>4</threads>
