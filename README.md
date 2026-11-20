@@ -16,6 +16,7 @@ Fork de [repo-software-testing-courses/pdv](https://github.com/repo-software-tes
 | Execuções no TestLink (1 cenário por funcionalidade, prints + PDF) | [testlink_evidences/](testlink_evidences/) |
 | Bugs reportados | [Issues](https://github.com/drbarros2004/pdv-QoS/issues) |
 | Complexidade ciclomática (PMD) | [metricas/pmd/pmd.txt](metricas/pmd/pmd.txt) |
+| Issues do SonarQube da CaixaService, antes e depois (guardadas para citar no relatório de inspeção) | [metricas/sonar/CaixaService-issues.md](metricas/sonar/CaixaService-issues.md) |
 
 ## Integrantes
 

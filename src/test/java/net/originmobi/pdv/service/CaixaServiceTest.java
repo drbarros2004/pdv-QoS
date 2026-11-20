@@ -234,7 +234,7 @@ public class CaixaServiceTest {
 		assertEquals("Conta principal", banco.getDescricao());
 	}
 
-	// teste que exercita o comportamento esperado, mas falha hoje (issue associada: #23)
+	// defeito encontrado por este teste: #23
 	@Test
 	public void cadastroDeCaixaComDescricaoNulaUsaPadrao() {
 		Caixa caixa = caixa(CaixaTipo.CAIXA, 0.0, null);
@@ -245,7 +245,7 @@ public class CaixaServiceTest {
 		assertEquals("Caixa diário", caixa.getDescricao());
 	}
 
-	// teste que exercita o comportamento esperado, mas falha hoje (issue associada: #23)
+	// defeito encontrado por este teste: #23
 	@Test
 	public void cadastroDeCofreComDescricaoNulaUsaPadrao() {
 		Caixa cofre = caixa(CaixaTipo.COFRE, 0.0, null);
@@ -255,7 +255,7 @@ public class CaixaServiceTest {
 		assertEquals("Cofre", cofre.getDescricao());
 	}
 
-	// teste que exercita o comportamento esperado, mas falha hoje (issue associada: #23)
+	// defeito encontrado por este teste: #23
 	@Test
 	public void cadastroDeBancoComDescricaoNulaUsaPadrao() {
 		Caixa banco = caixa(CaixaTipo.BANCO, 0.0, null);
@@ -281,48 +281,44 @@ public class CaixaServiceTest {
 		assertEquals("123456", banco.getConta());
 	}
 
-	// teste que exercita o comportamento esperado, mas falha hoje (issue associada: #23)
+	// defeito encontrado por este teste: #23
 	@Test
 	public void cadastroDeBancoSemAgenciaLancaExcecao() {
 		Caixa banco = caixa(CaixaTipo.BANCO, 0.0, "");
 		banco.setConta("2");
 
-		// mensagem que não existe no código, criada para o teste
 		assertLancaExcecao("Agência e conta são obrigatórias", () -> service.cadastro(banco));
 		verify(caixas, never()).save(any());
 	}
 
-	// teste que exercita o comportamento esperado, mas falha hoje (issue associada: #23)
+	// defeito encontrado por este teste: #23
 	@Test
 	public void cadastroDeBancoSemContaLancaExcecao() {
 		Caixa banco = caixa(CaixaTipo.BANCO, 0.0, "");
 		banco.setAgencia("1");
 
-		// mensagem que não existe no código, criada para o teste
 		assertLancaExcecao("Agência e conta são obrigatórias", () -> service.cadastro(banco));
 		verify(caixas, never()).save(any());
 	}
 
-	// teste que exercita o comportamento esperado, mas falha hoje (issue associada: #84)
+	// defeito encontrado por este teste: #84
 	@Test
 	public void cadastroDeBancoComAgenciaVaziaLancaExcecao() {
 		Caixa banco = caixa(CaixaTipo.BANCO, 0.0, "");
 		banco.setAgencia("");
 		banco.setConta("2");
 
-		// mensagem que não existe no código, criada para o teste
 		assertLancaExcecao("Agência e conta são obrigatórias", () -> service.cadastro(banco));
 		verify(caixas, never()).save(any());
 	}
 
-	// teste que exercita o comportamento esperado, mas falha hoje (issue associada: #84)
+	// defeito encontrado por este teste: #84
 	@Test
 	public void cadastroDeBancoComContaVaziaLancaExcecao() {
 		Caixa banco = caixa(CaixaTipo.BANCO, 0.0, "");
 		banco.setAgencia("1");
 		banco.setConta("");
 
-		// mensagem que não existe no código, criada para o teste
 		assertLancaExcecao("Agência e conta são obrigatórias", () -> service.cadastro(banco));
 		verify(caixas, never()).save(any());
 	}
@@ -374,7 +370,7 @@ public class CaixaServiceTest {
 		verify(caixas, never()).findById(any());
 	}
 
-	// teste que exercita o comportamento esperado, mas falha hoje (issue associada: #22)
+	// defeito encontrado por este teste: #22
 	@Test
 	public void fechaCaixaComSenhaNulaPedeSenha() {
 		when(usuarios.buscaUsuario("gerente")).thenReturn(usuario);
@@ -385,13 +381,12 @@ public class CaixaServiceTest {
 		verify(caixas, never()).findById(any());
 	}
 
-	// teste que exercita o comportamento esperado, mas falha hoje (issue associada: #21)
+	// defeito encontrado por este teste: #21
 	@Test
 	public void fechaCaixaInexistenteLancaExcecao() {
 		when(usuarios.buscaUsuario("gerente")).thenReturn(usuario);
 		when(caixas.findById(1L)).thenReturn(Optional.empty());
 
-		// mensagem que não existe no código, criada para o teste
 		assertLancaExcecao("Caixa não encontrado", () -> service.fechaCaixa(1L, SENHA));
 		verify(caixas, never()).save(any());
 	}
