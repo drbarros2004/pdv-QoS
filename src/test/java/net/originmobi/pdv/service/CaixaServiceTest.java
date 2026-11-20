@@ -112,6 +112,14 @@ public class CaixaServiceTest {
 		verify(caixas, never()).save(any());
 	}
 
+	@Test
+	public void cadastroDeCofreComValorDeAberturaNegativoLancaExcecao() {
+		Caixa cofre = caixa(CaixaTipo.COFRE, -0.01, "");
+
+		assertLancaExcecao("Valor informado é inválido", () -> service.cadastro(cofre));
+		verify(caixas, never()).save(any());
+	}
+
 	// cadastro: valor de abertura
 
 	@Test
@@ -479,6 +487,19 @@ public class CaixaServiceTest {
 		verify(caixas, never()).listaCaixasAbertos();
 	}
 
+	@Test
+	public void listarCaixasComDataEmOutroFormatoLancaExcecao() {
+		CaixaFilter filtro = new CaixaFilter();
+		filtro.setData_cadastro("05/10/2026");
+
+		try {
+			service.listarCaixas(filtro);
+			fail("Deveria ter lançado IllegalArgumentException");
+		} catch (IllegalArgumentException e) {
+			// esperado: Date.valueOf não aceita a data
+		}
+	}
+
 	// listaBancosAbertosTipoFilterBanco
 
 	@Test
@@ -507,6 +528,19 @@ public class CaixaServiceTest {
 		when(caixas.buscaCaixaTipoData(CaixaTipo.BANCO, Date.valueOf("2026-10-05"))).thenReturn(doDia);
 
 		assertSame(doDia, service.listaBancosAbertosTipoFilterBanco(CaixaTipo.BANCO, filtro));
+	}
+
+	@Test
+	public void listaBancosComDataEmOutroFormatoLancaExcecao() {
+		BancoFilter filtro = new BancoFilter();
+		filtro.setData_cadastro("05/10/2026");
+
+		try {
+			service.listaBancosAbertosTipoFilterBanco(CaixaTipo.BANCO, filtro);
+			fail("Deveria ter lançado IllegalArgumentException");
+		} catch (IllegalArgumentException e) {
+			// esperado: Date.valueOf não aceita a data
+		}
 	}
 
 }
