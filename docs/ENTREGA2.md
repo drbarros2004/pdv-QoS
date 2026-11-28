@@ -107,3 +107,9 @@ O escore é a coluna **Mutation Coverage** da sua classe (meta ≥ 80%). Depois 
 O roadmap executado, técnica funcional, métricas JaCoCo/PIT, integração, E2E e pendências do SonarQube estão consolidados em [ROADMAP_ENTREGA2_PEDRO.md](ROADMAP_ENTREGA2_PEDRO.md).
 
 Resultado atual de `VendaService`: 28 testes unitários verdes, 38/38 branches (100%), teste de integração real verde, E2E Selenium verde e 80% de mutation score no PIT.
+
+## 8. Resultado individual — Bernardo / RecebimentoService
+
+Testes unitários, técnicas funcional, estrutural e baseada em defeitos, integração e E2E do cadastro de pessoas estão em [ROADMAP_ENTREGA2_BERNARDO.md](ROADMAP_ENTREGA2_BERNARDO.md).
+
+Resultado atual de `RecebimentoService`: 38 testes unitários verdes, 36/36 branches (100%), 4 testes de integração verdes, 2 E2E Selenium verdes, 98% de mutation score no PIT e SonarQube de 33 issues para 0. Defeitos #13, #14, #27, #102, #103 e #104 corrigidos.
