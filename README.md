@@ -18,6 +18,7 @@ Fork de [repo-software-testing-courses/pdv](https://github.com/repo-software-tes
 | Complexidade ciclomática (PMD) | [metricas/pmd/pmd.txt](metricas/pmd/pmd.txt) |
 | Escore de mutação (PIT) | [metricas/pit/escore-de-mutacao.png](metricas/pit/escore-de-mutacao.png) |
 | Issues do SonarQube da CaixaService, antes e depois (guardadas para citar no relatório de inspeção) | [metricas/sonar/CaixaService-issues.md](metricas/sonar/CaixaService-issues.md) |
+| Issues do SonarQube da RecebimentoService, antes e depois | [metricas/sonar/RecebimentoService-issues.md](metricas/sonar/RecebimentoService-issues.md) |
 
 ## Integrantes
 

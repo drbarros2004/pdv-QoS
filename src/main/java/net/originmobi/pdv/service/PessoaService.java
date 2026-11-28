@@ -105,7 +105,13 @@ public class PessoaService {
 		pessoa.setCpfcnpj(cpfcnpj);
 
 		SimpleDateFormat formata = new SimpleDateFormat("dd/MM/yyyy");
-		Date dataNascimento = new Date(formata.parse(data_nascimento).getTime());
+		formata.setLenient(false);
+		Date dataNascimento;
+		try {
+			dataNascimento = new Date(formata.parse(data_nascimento).getTime());
+		} catch (ParseException | NullPointerException e) {
+			throw new RuntimeException("Data de nascimento inválida, informe no formato dd/mm/aaaa");
+		}
 		pessoa.setData_nascimento(dataNascimento);
 		pessoa.setObservacao(observacao);
 		pessoa.setData_cadastro(Date.valueOf(dataAtual));

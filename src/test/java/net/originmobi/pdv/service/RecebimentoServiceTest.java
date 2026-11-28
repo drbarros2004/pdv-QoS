@@ -386,6 +386,7 @@ public class RecebimentoServiceTest {
         when(recebimentoRepository.findById(COD_RECEBIMENTO)).thenReturn(Optional.of(recebimento));
         when(titulos.busca(COD_TITULO)).thenReturn(Optional.of(titulo));
         when(receParcelas.parcelasDoReceber(COD_RECEBIMENTO)).thenReturn(parcelasPadrao());
+        when(caixas.caixaAberto()).thenReturn(Optional.of(new Caixa()));
         doThrow(new RuntimeException("falha")).when(parcelas).receber(11L, 50.00, 0.00, 0.00);
 
         try {
@@ -397,7 +398,7 @@ public class RecebimentoServiceTest {
             assertEquals(esperado, obtido);
         }
         verify(parcelas, never()).receber(eq(12L), any(Double.class), any(Double.class), any(Double.class));
-        verifyZeroInteractions(caixas, usuarios, lancamentos, cartaoLancamentos);
+        verifyZeroInteractions(usuarios, lancamentos, cartaoLancamentos);
         verify(recebimentoRepository, never()).save(any(Recebimento.class));
     }
 
