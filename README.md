@@ -9,6 +9,7 @@ Fork de [repo-software-testing-courses/pdv](https://github.com/repo-software-tes
 | Setup do ambiente / guia da Entrega 1 | [docs/ENTREGA1.md](docs/ENTREGA1.md) |
 | Guia da Entrega 2 | [docs/ENTREGA2.md](docs/ENTREGA2.md) |
 | Entrega 2 — Pedro / VendaService | [docs/ROADMAP_ENTREGA2_PEDRO.md](docs/ROADMAP_ENTREGA2_PEDRO.md) |
+| Entrega 2 — Bernardo / RecebimentoService | [docs/ROADMAP_ENTREGA2_BERNARDO.md](docs/ROADMAP_ENTREGA2_BERNARDO.md) |
 | Código-fonte original (fork) | [src/](src/) |
 | Testes unitários | [src/test/java](src/test/java) |
 | Plano de Teste (IEEE 829) | [Google Docs](https://docs.google.com/document/d/1MENsC4y9bwNVXcliehmjZG5cn4AUcddNN_FSasJhsMM/edit?usp=sharing) |
@@ -18,6 +19,7 @@ Fork de [repo-software-testing-courses/pdv](https://github.com/repo-software-tes
 | Complexidade ciclomática (PMD) | [metricas/pmd/pmd.txt](metricas/pmd/pmd.txt) |
 | Escore de mutação (PIT) | [metricas/pit/escore-de-mutacao.png](metricas/pit/escore-de-mutacao.png) |
 | Issues do SonarQube da CaixaService, antes e depois (guardadas para citar no relatório de inspeção) | [metricas/sonar/CaixaService-issues.md](metricas/sonar/CaixaService-issues.md) |
+| Issues do SonarQube da RecebimentoService, antes e depois | [metricas/sonar/RecebimentoService-issues.md](metricas/sonar/RecebimentoService-issues.md) |
 
 ## Integrantes
 

@@ -119,19 +119,19 @@ public class RecebimentoServiceTest {
         verify(recebimentoRepository, never()).save(any(Recebimento.class));
     }
 
+    // teste que exercita o comportamento esperado, mas falha hoje (issue associada: #13)
     @Test
-    public void testReceberTituloNuloComportamentoAtual() {
-        when(recebimentoRepository.findById(COD_RECEBIMENTO)).thenReturn(Optional.of(recebimentoAberto()));
-        when(titulos.busca(null)).thenReturn(Optional.<Titulo>empty());
-
+    public void testReceberTituloNulo() {
         try {
             recebimentos.receber(COD_RECEBIMENTO, 50.00, 0.00, 0.00, null);
-            fail("Era esperado caracterizar a falha de desempacotamento do título nulo");
-        } catch (NullPointerException e) {
-            assertNotNull(e);
+            fail("Era esperado rejeitar o título nulo");
+        } catch (RuntimeException e) {
+            String obtido = e.getMessage();
+            String esperado = "Selecione um título para realizar o recebimento";
+            assertEquals(esperado, obtido);
         }
-        verify(titulos).busca(null);
         verifyZeroInteractions(receParcelas, parcelas, caixas, usuarios, lancamentos, cartaoLancamentos);
+        verify(recebimentoRepository, never()).save(any(Recebimento.class));
     }
 
     @Test
@@ -386,6 +386,7 @@ public class RecebimentoServiceTest {
         when(recebimentoRepository.findById(COD_RECEBIMENTO)).thenReturn(Optional.of(recebimento));
         when(titulos.busca(COD_TITULO)).thenReturn(Optional.of(titulo));
         when(receParcelas.parcelasDoReceber(COD_RECEBIMENTO)).thenReturn(parcelasPadrao());
+        when(caixas.caixaAberto()).thenReturn(Optional.of(new Caixa()));
         doThrow(new RuntimeException("falha")).when(parcelas).receber(11L, 50.00, 0.00, 0.00);
 
         try {
@@ -397,7 +398,7 @@ public class RecebimentoServiceTest {
             assertEquals(esperado, obtido);
         }
         verify(parcelas, never()).receber(eq(12L), any(Double.class), any(Double.class), any(Double.class));
-        verifyZeroInteractions(caixas, usuarios, lancamentos, cartaoLancamentos);
+        verifyZeroInteractions(usuarios, lancamentos, cartaoLancamentos);
         verify(recebimentoRepository, never()).save(any(Recebimento.class));
     }
 
@@ -533,6 +534,7 @@ public class RecebimentoServiceTest {
         verifyZeroInteractions(recebimentoRepository, pessoas);
     }
 
+    // teste que exercita o comportamento esperado, mas falha hoje (issue associada: #14)
     @Test
     @SuppressWarnings("removal")
     public void testAbrirRecebimentoMesmoClienteIdsDistintos() {
@@ -540,18 +542,20 @@ public class RecebimentoServiceTest {
         Pessoa pessoa = pessoa(new Long(1000L));
         Parcela parcela = parcela(11L, 30.00, pessoa);
         when(parcelas.busca(11L)).thenReturn(parcela);
+        when(pessoas.buscaPessoa(codpes)).thenReturn(Optional.of(pessoa));
+        doAnswer(invocacao -> {
+            Recebimento recebimento = invocacao.getArgument(0);
+            recebimento.setCodigo(21L);
+            return recebimento;
+        }).when(recebimentoRepository).save(any(Recebimento.class));
 
-        assertEquals(codpes.longValue(), pessoa.getCodigo().longValue());
         assertNotSame(codpes, pessoa.getCodigo());
-        try {
-            recebimentos.abrirRecebimento(codpes, new String[] { "11" });
-            fail("Era esperado caracterizar a rejeição indevida do mesmo cliente");
-        } catch (RuntimeException e) {
-            String obtido = e.getMessage();
-            String esperado = "A parcela 11 não pertence ao cliente selecionado";
-            assertEquals(esperado, obtido);
-        }
-        verifyZeroInteractions(recebimentoRepository, pessoas);
+        String obtido = recebimentos.abrirRecebimento(codpes, new String[] { "11" });
+
+        assertEquals("21", obtido);
+        ArgumentCaptor<Recebimento> captor = ArgumentCaptor.forClass(Recebimento.class);
+        verify(recebimentoRepository).save(captor.capture());
+        assertEquals(30.00, captor.getValue().getValor_total(), DELTA);
     }
 
     @Test
@@ -632,6 +636,210 @@ public class RecebimentoServiceTest {
         }
         verify(recebimentoRepository).findById(COD_RECEBIMENTO);
         verify(recebimentoRepository).deleteById(COD_RECEBIMENTO);
+    }
+
+    // Entrega 2: casos novos das técnicas funcional, estrutural e baseada em defeitos
+
+    // teste que exercita o comportamento esperado, mas falha hoje (issue associada: #102)
+    @Test
+    public void testReceberRecebimentoInexistente() {
+        when(recebimentoRepository.findById(COD_RECEBIMENTO)).thenReturn(Optional.<Recebimento>empty());
+
+        try {
+            recebimentos.receber(COD_RECEBIMENTO, 50.00, 0.00, 0.00, COD_TITULO);
+            fail("Era esperado rejeitar o recebimento inexistente");
+        } catch (RuntimeException e) {
+            String obtido = e.getMessage();
+            String esperado = "Recebimento não encontrado";
+            assertEquals(esperado, obtido);
+        }
+        verifyZeroInteractions(receParcelas, parcelas, caixas, usuarios, lancamentos, cartaoLancamentos);
+        verify(recebimentoRepository, never()).save(any(Recebimento.class));
+    }
+
+    // teste que exercita o comportamento esperado, mas falha hoje (issue associada: #102)
+    @Test
+    public void testReceberTituloInexistente() {
+        when(recebimentoRepository.findById(COD_RECEBIMENTO)).thenReturn(Optional.of(recebimentoAberto()));
+        when(titulos.busca(COD_TITULO)).thenReturn(Optional.<Titulo>empty());
+
+        try {
+            recebimentos.receber(COD_RECEBIMENTO, 50.00, 0.00, 0.00, COD_TITULO);
+            fail("Era esperado rejeitar o título inexistente");
+        } catch (RuntimeException e) {
+            String obtido = e.getMessage();
+            String esperado = "Título não encontrado";
+            assertEquals(esperado, obtido);
+        }
+        verifyZeroInteractions(receParcelas, parcelas, caixas, usuarios, lancamentos, cartaoLancamentos);
+        verify(recebimentoRepository, never()).save(any(Recebimento.class));
+    }
+
+    // teste que exercita o comportamento esperado, mas falha hoje (issue associada: #103)
+    @Test
+    public void testReceberDinheiroSemCaixaAberto() {
+        Recebimento recebimento = recebimentoAberto();
+        when(recebimentoRepository.findById(COD_RECEBIMENTO)).thenReturn(Optional.of(recebimento));
+        when(titulos.busca(COD_TITULO)).thenReturn(Optional.of(titulo("DIN")));
+        when(receParcelas.parcelasDoReceber(COD_RECEBIMENTO)).thenReturn(parcelasPadrao());
+        when(caixas.caixaAberto()).thenReturn(Optional.<Caixa>empty());
+
+        try {
+            recebimentos.receber(COD_RECEBIMENTO, 50.00, 0.00, 0.00, COD_TITULO);
+            fail("Era esperado rejeitar o recebimento em dinheiro sem caixa aberto");
+        } catch (RuntimeException e) {
+            String obtido = e.getMessage();
+            String esperado = "Nenhum caixa aberto";
+            assertEquals(esperado, obtido);
+        }
+        verifyZeroInteractions(parcelas, lancamentos, cartaoLancamentos);
+        verify(recebimentoRepository, never()).save(any(Recebimento.class));
+    }
+
+    @Test
+    public void testReceberCartaoNaoConsultaCaixa() {
+        Recebimento recebimento = recebimentoAberto();
+        Titulo titulo = titulo("CARTDEB");
+        when(recebimentoRepository.findById(COD_RECEBIMENTO)).thenReturn(Optional.of(recebimento));
+        when(titulos.busca(COD_TITULO)).thenReturn(Optional.of(titulo));
+        when(receParcelas.parcelasDoReceber(COD_RECEBIMENTO)).thenReturn(parcelasPadrao());
+        when(usuarios.buscaUsuario("usuarioTeste")).thenReturn(usuario());
+
+        String obtido = recebimentos.receber(COD_RECEBIMENTO, 40.00, 1.00, 3.00, COD_TITULO);
+
+        assertEquals("Recebimento realizado com sucesso", obtido);
+        verify(parcelas).receber(11L, 40.00, 0.00, 0.00);
+        verify(cartaoLancamentos).lancamento(40.00, Optional.of(titulo));
+        verifyZeroInteractions(caixas, lancamentos);
+        ArgumentCaptor<Recebimento> captor = ArgumentCaptor.forClass(Recebimento.class);
+        verify(recebimentoRepository).save(captor.capture());
+        Recebimento salvo = captor.getValue();
+        assertEquals(titulo, salvo.getTitulo());
+        assertEquals(40.00, salvo.getValor_recebido(), DELTA);
+        assertEquals(1.00, salvo.getValor_acrescimo(), DELTA);
+        assertEquals(3.00, salvo.getValor_desconto(), DELTA);
+        assertNotNull(salvo.getData_processamento());
+    }
+
+    @Test
+    public void testReceberValorMinimo() {
+        Recebimento recebimento = recebimentoAberto();
+        when(recebimentoRepository.findById(COD_RECEBIMENTO)).thenReturn(Optional.of(recebimento));
+        when(titulos.busca(COD_TITULO)).thenReturn(Optional.of(titulo("DIN")));
+        when(receParcelas.parcelasDoReceber(COD_RECEBIMENTO)).thenReturn(parcelasPadrao());
+        when(usuarios.buscaUsuario("usuarioTeste")).thenReturn(usuario());
+        when(caixas.caixaAberto()).thenReturn(Optional.of(new Caixa()));
+
+        String obtido = recebimentos.receber(COD_RECEBIMENTO, 0.01, 0.00, 0.00, COD_TITULO);
+
+        assertEquals("Recebimento realizado com sucesso", obtido);
+        verify(parcelas).receber(11L, 0.01, 0.00, 0.00);
+        verify(parcelas, never()).receber(eq(12L), any(Double.class), any(Double.class), any(Double.class));
+    }
+
+    @Test
+    public void testReceberTotalComCentavosArredondados() {
+        Recebimento recebimento = recebimentoAberto();
+        recebimento.setValor_total(100.004);
+        when(recebimentoRepository.findById(COD_RECEBIMENTO)).thenReturn(Optional.of(recebimento));
+        when(titulos.busca(COD_TITULO)).thenReturn(Optional.of(titulo("DIN")));
+
+        try {
+            recebimentos.receber(COD_RECEBIMENTO, 100.01, 0.00, 0.00, COD_TITULO);
+            fail("Era esperado comparar com o total arredondado em centavos");
+        } catch (RuntimeException e) {
+            assertEquals("Valor de recebimento é superior aos títulos", e.getMessage());
+        }
+        verifyZeroInteractions(receParcelas, parcelas);
+    }
+
+    @Test
+    public void testReceberLancamentoReferenciaORecebimento() {
+        Recebimento recebimento = recebimentoAberto();
+        when(recebimentoRepository.findById(COD_RECEBIMENTO)).thenReturn(Optional.of(recebimento));
+        when(titulos.busca(COD_TITULO)).thenReturn(Optional.of(titulo("DIN")));
+        when(receParcelas.parcelasDoReceber(COD_RECEBIMENTO)).thenReturn(parcelasPadrao());
+        when(usuarios.buscaUsuario("usuarioTeste")).thenReturn(usuario());
+        when(caixas.caixaAberto()).thenReturn(Optional.of(new Caixa()));
+
+        recebimentos.receber(COD_RECEBIMENTO, 60.00, 0.00, 0.00, COD_TITULO);
+
+        ArgumentCaptor<CaixaLancamento> captor = ArgumentCaptor.forClass(CaixaLancamento.class);
+        verify(lancamentos).lancamento(captor.capture());
+        assertEquals("Referente ao recebimento " + COD_RECEBIMENTO, captor.getValue().getObservacao());
+    }
+
+    @Test
+    public void testReceberParcelaSemSaldoNaoConsomeValor() {
+        Recebimento recebimento = recebimentoAberto();
+        Pessoa pessoa = pessoa(7L);
+        List<Parcela> lista = Arrays.asList(parcela(11L, 0.00, pessoa), parcela(12L, 100.00, pessoa));
+        when(recebimentoRepository.findById(COD_RECEBIMENTO)).thenReturn(Optional.of(recebimento));
+        when(titulos.busca(COD_TITULO)).thenReturn(Optional.of(titulo("DIN")));
+        when(receParcelas.parcelasDoReceber(COD_RECEBIMENTO)).thenReturn(lista);
+        when(usuarios.buscaUsuario("usuarioTeste")).thenReturn(usuario());
+        when(caixas.caixaAberto()).thenReturn(Optional.of(new Caixa()));
+
+        recebimentos.receber(COD_RECEBIMENTO, 70.00, 0.00, 0.00, COD_TITULO);
+
+        InOrder ordem = inOrder(parcelas);
+        ordem.verify(parcelas).receber(11L, 0.00, 0.00, 0.00);
+        ordem.verify(parcelas).receber(12L, 70.00, 0.00, 0.00);
+    }
+
+    // teste que exercita o comportamento esperado, mas falha hoje (issue associada: #104)
+    @Test
+    public void testReceberValorMaiorQueSaldoDasParcelas() {
+        // o total do recebimento é fixado na abertura; se a parcela for abatida depois, o saldo fica menor que o total
+        Recebimento recebimento = recebimentoAberto();
+        Pessoa pessoa = pessoa(7L);
+        when(recebimentoRepository.findById(COD_RECEBIMENTO)).thenReturn(Optional.of(recebimento));
+        when(titulos.busca(COD_TITULO)).thenReturn(Optional.of(titulo("DIN")));
+        when(receParcelas.parcelasDoReceber(COD_RECEBIMENTO))
+                .thenReturn(Collections.singletonList(parcela(11L, 50.00, pessoa)));
+
+        try {
+            recebimentos.receber(COD_RECEBIMENTO, 80.00, 0.00, 0.00, COD_TITULO);
+            fail("Era esperado rejeitar valor superior ao saldo das parcelas");
+        } catch (RuntimeException e) {
+            String obtido = e.getMessage();
+            String esperado = "Valor de recebimento é superior aos títulos";
+            assertEquals(esperado, obtido);
+        }
+        verifyZeroInteractions(parcelas, caixas, lancamentos, cartaoLancamentos);
+        verify(recebimentoRepository, never()).save(any(Recebimento.class));
+    }
+
+    @Test
+    public void testAbrirRecebimentoClienteNaoEncontradoComParcelaValida() {
+        Pessoa pessoa = pessoa(7L);
+        when(parcelas.busca(11L)).thenReturn(parcela(11L, 30.00, pessoa));
+        when(pessoas.buscaPessoa(7L)).thenReturn(Optional.<Pessoa>empty());
+
+        try {
+            recebimentos.abrirRecebimento(7L, new String[] { "11" });
+            fail("Era esperado rejeitar o cliente inexistente");
+        } catch (RuntimeException e) {
+            assertEquals("Cliente não encontrado", e.getMessage());
+        }
+        verifyZeroInteractions(recebimentoRepository);
+    }
+
+    @Test
+    public void testAbrirRecebimentoSegundaParcelaQuitada() {
+        Pessoa pessoa = pessoa(7L);
+        Parcela quitada = parcela(12L, 0.00, pessoa);
+        quitada.setQuitado(1);
+        when(parcelas.busca(11L)).thenReturn(parcela(11L, 30.00, pessoa));
+        when(parcelas.busca(12L)).thenReturn(quitada);
+
+        try {
+            recebimentos.abrirRecebimento(7L, new String[] { "11", "12" });
+            fail("Era esperado rejeitar a segunda parcela quitada");
+        } catch (RuntimeException e) {
+            assertEquals("Parcela 12 já esta quitada, verifique.", e.getMessage());
+        }
+        verifyZeroInteractions(recebimentoRepository, pessoas);
     }
 
     private Recebimento recebimentoAberto() {
